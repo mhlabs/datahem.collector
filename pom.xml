@@ -1,0 +1,236 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>org.datahem</groupId>
+  <artifactId>collector</artifactId>
+  <version>0.3</version>
+  
+  <packaging>war</packaging>
+  
+  <name>DataHem</name>
+  <inceptionYear>2018</inceptionYear>
+  <organization>
+  	<name>MatHem Sverige AB</name>
+  </organization>
+  
+  <prerequisites>
+  	<maven>3.1.0</maven>
+  </prerequisites>
+  
+  <properties>
+   	<failOnMissingWebXml>false</failOnMissingWebXml> <!-- REQUIRED -->
+    <maven.compiler.source>1.8</maven.compiler.source> <!-- REQUIRED -->
+    <maven.compiler.target>1.8</maven.compiler.target> <!-- REQUIRED -->
+    <appengine-sdk.version>1.9.59</appengine-sdk.version>
+    <google-api-client.version>1.23.0</google-api-client.version>
+    <google-cloud-pubsub.version>0.30.0-beta</google-cloud-pubsub.version>
+    <servlet.version>4.0.0</servlet.version>
+    <protobuf.version>3.5.0</protobuf.version>
+    <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<java.version>1.8</java.version>	
+	<license.copyrightOwners>Robert Sahlin and MatHem Sverige AB</license.copyrightOwners>
+	<license.licenseName>mit</license.licenseName>
+	<!--<license.outputDirectory>${basedir}</license.outputDirectory>-->
+	<license.licenceFile>LICENSE</license.licenceFile>	 
+  </properties>
+  
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.17</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <linkXRef>false</linkXRef>
+          <configLocation>checkstyle.xml</configLocation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+  
+  <build>
+	<finalName>war</finalName>
+    <outputDirectory>${webappDirectory}/WEB-INF/classes</outputDirectory>
+    <plugins>
+   		<plugin>
+	        <groupId>org.codehaus.mojo</groupId>
+	        <artifactId>versions-maven-plugin</artifactId>
+	        <version>2.2</version>
+	        <executions>
+	          <execution>
+	            <phase>compile</phase>
+	            <goals>
+	              <goal>display-dependency-updates</goal>
+	              <goal>display-plugin-updates</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+	   	</plugin>
+	    <plugin>
+	    	<artifactId>maven-compiler-plugin</artifactId>
+	        <version>3.3</version>
+	        <configuration>
+				<source>${java.version}</source>
+				<target>${java.version}</target>
+			</configuration>
+	  	</plugin>
+	    <plugin>
+	    	<groupId>com.google.cloud.tools</groupId>
+	    	<artifactId>appengine-maven-plugin</artifactId>
+	    	<version>1.0.0</version>
+		</plugin>
+		<plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-war-plugin</artifactId>
+	        <version>2.6</version>
+	        <executions>
+	          	<execution>
+	            	<phase>compile</phase>
+	            	<goals>
+	            		<goal>exploded</goal>
+	            	</goals>
+	         	</execution>
+	        </executions>
+	        <configuration>
+	        	<webappDirectory>${webappDirectory}</webappDirectory>
+	    	</configuration>
+		</plugin>
+      	<plugin>
+	        <groupId>org.codehaus.mojo</groupId>
+	        <artifactId>findbugs-maven-plugin</artifactId>
+	        <version>3.0.3</version>
+	        <configuration>
+	        	<failOnError>false</failOnError>
+	        </configuration>
+	        <executions>
+	          	<execution>
+	            	<goals>
+	            		<goal>check</goal>
+	        		</goals>
+	        	</execution>
+	    	</executions>
+	  	</plugin>     
+         
+      	<plugin>
+        	<groupId>org.codehaus.mojo</groupId>
+        	<artifactId>license-maven-plugin</artifactId>
+        	<version>1.15</version>
+        	<configuration>
+          		<verbose>false</verbose>
+          		<processStartTag>========================LICENSE_START=================================</processStartTag>
+				<processEndTag>=========================LICENSE_END==================================</processEndTag>
+        	</configuration>
+        	<executions>
+        		<execution>
+            		<id>first</id>
+            		<goals>
+              			<goal>update-project-license</goal>
+            		</goals>
+            		<phase>process-sources</phase>
+          		</execution>
+				<execution>
+            		<id>second</id>
+            		<goals>
+              			<goal>update-file-header</goal>
+            		</goals>
+            		<phase>process-sources</phase>
+            		<configuration>
+              			<roots>
+			            	<root>src/main/java</root>
+			            	<root>src/test</root>
+              			</roots>
+            		</configuration>
+          		</execution>
+          		<execution>
+          			<id>add-third-party</id>
+          			<goals>
+              			<goal>add-third-party</goal>
+            		</goals>
+            		<configuration>
+                		<licenseMerges>
+          					<licenseMerge>The Apache Software License, Version 2.0|Apache License, Version 2.0|Apache Public License 2.0</licenseMerge>
+                		</licenseMerges>
+              		</configuration>
+				</execution>
+        	</executions>
+      	</plugin>
+  	</plugins>
+  </build>
+  		<dependencies>
+
+		    <dependency>
+		      <groupId>com.google.appengine</groupId>
+		      <artifactId>appengine-api-1.0-sdk</artifactId>
+		      <version>${appengine-sdk.version}</version>
+		    </dependency>
+
+		    <dependency>                        <!-- REQUIRED -->
+		      <groupId>javax.servlet</groupId>  <!-- Java Servlet API -->
+		      <artifactId>javax.servlet-api</artifactId>
+		      <!--<version>3.1.0</version>-->
+		      <version>${servlet.version}</version>
+		      <scope>provided</scope>           <!-- Provided by the Jetty Servlet Container -->
+		    </dependency>
+
+			<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-pubsub -->
+			<dependency>
+			    <groupId>com.google.cloud</groupId>
+			    <artifactId>google-cloud-pubsub</artifactId>
+			    <version>${google-cloud-pubsub.version}</version>
+			        <!--<version>${google-cloud-pubsub.version}0.26.0-beta</version>-->
+			</dependency>
+
+		    <dependency>
+		      <groupId>com.google.api-client</groupId>
+		      <artifactId>google-api-client-appengine</artifactId>
+		      <version>${google-api-client.version}</version>
+		      <exclusions>
+		            <exclusion>
+		                <groupId>com.google.guava</groupId>
+		                <artifactId>guava-jdk5</artifactId>
+		            </exclusion>
+		        </exclusions>
+		    </dependency>
+
+		    <dependency>
+		      <groupId>org.codehaus.jackson</groupId>
+		      <artifactId>jackson-mapper-asl</artifactId>
+		      <version>1.9.13</version>
+		    </dependency>
+
+		    <dependency>
+		      <groupId>junit</groupId>
+		      <artifactId>junit</artifactId>
+		      <version>4.12</version>
+		      <scope>test</scope>
+		    </dependency>
+
+		    <dependency>
+		      <groupId>org.mockito</groupId>
+		      <artifactId>mockito-all</artifactId>
+		      <!--<version>1.10.19</version>-->
+		      <version>2.0.2-beta</version>
+		      <scope>test</scope>
+		    </dependency>
+    
+		    <!-- Add slf4j API frontend binding with JUL backend -->
+		    <dependency>
+		      <groupId>org.slf4j</groupId>
+		      <artifactId>slf4j-api</artifactId>
+		      <version>1.7.14</version>
+		    </dependency>
+
+		    <dependency>
+		      <groupId>org.slf4j</groupId>
+		      <artifactId>slf4j-jdk14</artifactId>
+		      <version>1.7.14</version>
+		      <!-- When loaded at runtime this will wire up slf4j to the JUL backend -->
+		      <scope>runtime</scope>
+		    </dependency> 
+		</dependencies>
+</project>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://java.sun.com/xml/ns/javaee"
+  xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+  
+  <!-- will change this to url-parameter when adding cloud enpoint mappings and move to app engine flex -->
+  <!-- one servlet per source -->
+  <servlet>
+    <servlet-name>MeasurementProtocolServlet</servlet-name>
+    <servlet-class>org.datahem.collector.CollectorServlet</servlet-class>
+    <!-- pubSubTopicId is a required parameter -->
+    <init-param>
+            <param-name>pubSubTopicId</param-name>
+            <param-value>UA-1234567-89</param-value>
+    </init-param>
+    <!-- pubSubProjectId is optional, if none provided the project id for the appengine service is used -->
+    <!--
+    <init-param>
+            <param-name>pubSubProjectId</param-name>
+            <param-value>mathem-data</param-value>
+    </init-param>
+    -->
+  </servlet>
+  
+  <!-- one servlet-mapping per source -->
+  <servlet-mapping>
+    <servlet-name>MeasurementProtocolServlet</servlet-name>
+    <url-pattern>/collect/UA-1234567-89/</url-pattern>
+  </servlet-mapping>
+
+</web-app>
