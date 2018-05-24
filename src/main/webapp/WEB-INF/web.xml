@@ -13,7 +13,7 @@
     <!-- pubSubTopicId is a required parameter -->
     <init-param>
             <param-name>pubSubTopicId</param-name>
-            <param-value>UA-1234567-89</param-value>
+            <param-value>ua123456789</param-value>
     </init-param>
     <!-- pubSubProjectId is optional, if none provided the project id for the appengine service is used -->
     <!--
@@ -27,7 +27,7 @@
   <!-- one servlet-mapping per source -->
   <servlet-mapping>
     <servlet-name>MeasurementProtocolServlet</servlet-name>
-    <url-pattern>/collect/UA-1234567-89/</url-pattern>
+    <url-pattern>/collect/ua123456789/</url-pattern>
   </servlet-mapping>
 
 </web-app>
