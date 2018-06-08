@@ -29,11 +29,13 @@
     <protobuf.version>3.5.0</protobuf.version>
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	<java.version>1.8</java.version>	
+	<java.version>1.8</java.version>
 	<license.copyrightOwners>Robert Sahlin and MatHem Sverige AB</license.copyrightOwners>
 	<license.licenseName>mit</license.licenseName>
 	<!--<license.outputDirectory>${basedir}</license.outputDirectory>-->
-	<license.licenceFile>LICENSE</license.licenceFile>	 
+	<license.licenceFile>LICENSE</license.licenceFile>
+	<endpoints.framework.version>2.0.14</endpoints.framework.version>
+	<endpoints.management.version>1.0.4</endpoints.management.version>
   </properties>
   
   <reporting>
@@ -85,6 +87,15 @@
 	    	<version>1.0.0</version>
 		</plugin>
 		<plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>endpoints-framework-maven-plugin</artifactId>
+                <version>1.0.2</version>
+                <configuration>
+                    <!-- plugin configuration -->
+                    <hostname>${endpoints.project.id}.appspot.com</hostname>
+                </configuration>
+            </plugin>
+		<plugin>
 	        <groupId>org.apache.maven.plugins</groupId>
 	        <artifactId>maven-war-plugin</artifactId>
 	        <version>2.6</version>
@@ -98,6 +109,13 @@
 	        </executions>
 	        <configuration>
 	        	<webappDirectory>${webappDirectory}</webappDirectory>
+	        	<webResources>
+                        <resources>
+                            <directory>${basedir}/src/main/webapp/WEB-INF</directory>
+                            <filtering>true</filtering>
+                            <targetPath>WEB-INF</targetPath>
+                        </resources>
+                    </webResources>
 	    	</configuration>
 		</plugin>
       	<plugin>
@@ -162,6 +180,18 @@
   	</plugins>
   </build>
   		<dependencies>
+  		
+  		<!-- Compile/runtime dependencies -->
+        <dependency>
+            <groupId>com.google.endpoints</groupId>
+            <artifactId>endpoints-framework</artifactId>
+            <version>${endpoints.framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.endpoints</groupId>
+            <artifactId>endpoints-management-control-appengine-all</artifactId>
+            <version>1.0.7</version>
+        </dependency>
 
 		    <dependency>
 		      <groupId>com.google.appengine</groupId>
@@ -176,6 +206,12 @@
 		      <version>${servlet.version}</version>
 		      <scope>provided</scope>           <!-- Provided by the Jetty Servlet Container -->
 		    </dependency>
+		    
+		    <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
 
 			<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-pubsub -->
 			<dependency>
