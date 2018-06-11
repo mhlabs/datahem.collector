@@ -5,30 +5,6 @@
   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
   http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
   
-  <!-- will change this to url-parameter when adding cloud enpoint mappings and move to app engine flex -->
-  <!-- one servlet per source -->
-  <servlet>
-    <servlet-name>MeasurementProtocolServlet</servlet-name>
-    <servlet-class>org.datahem.collector.CollectorServlet</servlet-class>
-    <!-- pubSubTopicId is a required parameter -->
-    <init-param>
-            <param-name>pubSubTopicId</param-name>
-            <param-value>ua123456789</param-value>
-    </init-param>
-    <!-- pubSubProjectId is optional, if none provided the project id for the appengine service is used -->
-    <!--
-    <init-param>
-            <param-name>pubSubProjectId</param-name>
-            <param-value>mathem-data</param-value>
-    </init-param>
-    -->
-  </servlet>
-  
-  <!-- one servlet-mapping per source -->
-  <servlet-mapping>
-    <servlet-name>MeasurementProtocolServlet</servlet-name>
-    <url-pattern>/collect/ua123456789/</url-pattern>
-  </servlet-mapping>
 
     <!-- Wrap the backend with Endpoints Frameworks v2. -->
     <servlet>
@@ -36,7 +12,8 @@
         <servlet-class>com.google.api.server.spi.EndpointsServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
-            <param-value>org.datahem.echo.Echo</param-value>
+            <!--<param-value>org.datahem.echo.Echo</param-value>-->
+            <param-value>org.datahem.collector.measurementprotocol.Collect</param-value>
         </init-param>
     </servlet>
     <!-- Route API method requests to the backend. -->
