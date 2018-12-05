@@ -74,8 +74,8 @@ public class PubSubHelper{
 				.setProject(pubSubProjectId)
 				.setTopic(pubSubTopicId)
 				.build();*/
-			//ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
-			String topic = "projects/"+ pubSubProjectId +"/topics/" + pubSubTopicId;
+			ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
+			//String topic = "projects/"+ pubSubProjectId +"/topics/" + pubSubTopicId;
 			//TopicName topic = TopicName.create(pubSubProjectId, pubSubTopicId);
 	
 			try {
@@ -85,15 +85,15 @@ public class PubSubHelper{
 				Duration publishDelayThreshold = Duration.ofMillis(1); // default : 1 ms
 
 				// Publish request get triggered based on request size, messages count & time since last publish
-				BatchingSettings batchingSettings = BatchingSettings.newBuilder()
+				/*BatchingSettings batchingSettings = BatchingSettings.newBuilder()
 					.setElementCountThreshold(messageCountBatchSize)
 					.setRequestByteThreshold(requestBytesThreshold)
 					.setDelayThreshold(publishDelayThreshold)
-					.build();
+					.build();*/
 				
 			  	publisher = Publisher
 			  		.newBuilder(topic)
-			  		.setBatchingSettings(batchingSettings)
+			  		//.setBatchingSettings(batchingSettings)
 			  		.build();
 			  		
 			  	  // schedule publishing one message at a time : messages get automatically batched
@@ -109,15 +109,30 @@ public class PubSubHelper{
 	                    )
 	                    .setData(collectorPayloadEntity.toByteString())
 						.build();
-						
+						LOG.info("pubsubMessage:" + pubsubMessage);
 				    // Once published, returns a server-assigned message id (unique within the topic)
-				    publisher.publish(pubsubMessage);
+				    publisher.publish(pubsubMessage).get();
+				    /*ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+ 					ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
+   						public void onSuccess(String messageId) {
+     						LOG.info("published with message id: " + messageId);
+   						}
+
+   						public void onFailure(Throwable t) {
+     						LOG.info("failed to publish: " + t);
+   						}
+ 					});*/
+				    LOG.info("published");
 				}
-			} finally {
+			}
+			catch(Exception e){LOG.error("Exception: " + e.getMessage());}
+			finally {
 		  		if (publisher != null) {
 			  		try{
+			  			LOG.info("shuting down");
 			    		publisher.shutdown();
 			    		publisher.awaitTermination(1, TimeUnit.MINUTES); //PublisherSnippets.java
+			    		LOG.info("terminated");
 			    	}catch(Exception e){
 			    		System.out.print("Exception: ");
 	        			System.out.println(e.getMessage());

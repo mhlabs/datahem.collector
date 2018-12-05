@@ -138,7 +138,7 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 			.map(s -> new String[]{s, req.getHeader(s)})
 			.collect(Collectors.toMap(s -> s[0], s -> s[1]));
 
-			LOG.info(Arrays.toString(headers.entrySet().toArray()));
+			//LOG.info(Arrays.toString(headers.entrySet().toArray()));
 
 		CollectorPayloadEntity collectorPayloadEntity = CollectorPayloadEntity.newBuilder()
 			.setPayload(payload)

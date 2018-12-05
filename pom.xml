@@ -29,6 +29,12 @@
     <google-cloud-pubsub.version>1.52.0</google-cloud-pubsub.version>
     <servlet.version>4.0.0</servlet.version>
     <protobuf.version>3.5.0</protobuf.version>
+    <endpoints.management.version>1.0.7</endpoints.management.version>
+    <!--<endpoints.management.version>1.0.11</endpoints.management.version>
+    <endpoints.management.version>1.0.4</endpoints.management.version>-->
+	<endpoints.framework.version>2.2.0</endpoints.framework.version>
+	<!--<endpoints.framework.version>2.0.14</endpoints.framework.version>-->
+            
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	<java.version>1.8</java.version>
@@ -36,9 +42,7 @@
 	<license.licenseName>mit</license.licenseName>
 	<!--<license.outputDirectory>${basedir}</license.outputDirectory>-->
 	<license.licenceFile>LICENSE</license.licenceFile>
-	<endpoints.framework.version>2.2.0</endpoints.framework.version>
-	<!--<endpoints.framework.version>2.0.14</endpoints.framework.version>-->
-	<endpoints.management.version>1.0.4</endpoints.management.version>
+
   </properties>
   
   <reporting>
@@ -180,6 +184,34 @@
 				</execution>
         	</executions>
       	</plugin>
+      	<!--<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>[ groupId ]</groupId>
+                  <artifactId>[ artifactId ]</artifactId>
+                  <version>[ version ]</version>
+                  <type>[ packaging ]</type>
+                  <classifier> [classifier - optional] </classifier>
+                  <overWrite>[ true or false ]</overWrite>
+                  <outputDirectory>[ output directory ]</outputDirectory>
+                  <destFileName>[ filename ]</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>-->
   	</plugins>
   </build>
   		<dependencies>
@@ -190,12 +222,25 @@
             <artifactId>endpoints-framework</artifactId>
             <version>${endpoints.framework.version}</version>
         </dependency>
+        <!--<dependency>
+        <groupId>com.google.endpoints</groupId>
+        <artifactId>endpoints-management-control-appengine</artifactId>
+        <version>${endpoints.management.version}</version>
+    </dependency>-->
+        
         <dependency>
             <groupId>com.google.endpoints</groupId>
             <artifactId>endpoints-management-control-appengine-all</artifactId>
-            <!--<version>1.0.7</version>-->
-            <version>1.0.11</version>
+            <version>${endpoints.management.version}</version>
         </dependency>
+        
+        <!-- https://mvnrepository.com/artifact/io.opencensus/opencensus-api -->
+<dependency>
+    <groupId>io.opencensus</groupId>
+    <artifactId>opencensus-api</artifactId>
+    <version>0.18.0</version>
+</dependency>
+
 
 <!--
 		    <dependency>
@@ -223,7 +268,12 @@
 			    <groupId>com.google.cloud</groupId>
 			    <artifactId>google-cloud-pubsub</artifactId>
 			    <version>${google-cloud-pubsub.version}</version>
-			        <!--<version>${google-cloud-pubsub.version}0.26.0-beta</version>-->
+			    <exclusions>
+		            <exclusion>
+		                <groupId>io.opencensus</groupId>
+    					<artifactId>opencensus-api</artifactId>
+		            </exclusion>
+		        </exclusions>
 			</dependency>
 <!--
 		    <dependency>
