@@ -56,17 +56,44 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.gax.batching.BatchingSettings;
+import java.util.concurrent.TimeUnit;
+import org.threeten.bp.Duration;
+
+import com.google.pubsub.v1.ProjectTopicName;
+
 public class PubSubHelper{
 	private static final Logger LOG = LoggerFactory.getLogger(PubSubHelper.class);
 
 	public static void publishMessages(List<CollectorPayloadEntity> collectorPayloadEntities, String pubSubProjectId, String pubSubTopicId) throws IOException{
 			Publisher publisher = null;
-			List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
-			TopicName topic = TopicName.create(pubSubProjectId, pubSubTopicId);
+			//List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
+			LOG.info("pubSubProjectId:" + pubSubProjectId + ", pubSubTopicId:" + pubSubTopicId);
+			/*
+			ProjectTopicName topic = ProjectTopicName.newBuilder()
+				.setProject(pubSubProjectId)
+				.setTopic(pubSubTopicId)
+				.build();*/
+			//ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
+			String topic = "projects/"+ pubSubProjectId +"/topics/" + pubSubTopicId;
+			//TopicName topic = TopicName.create(pubSubProjectId, pubSubTopicId);
 	
 			try {
+				// Batch settings control how the publisher batches messages
+				long requestBytesThreshold = 5000L; // default : 1kb
+				long messageCountBatchSize = 1L; // default : 100
+				Duration publishDelayThreshold = Duration.ofMillis(1); // default : 1 ms
+
+				// Publish request get triggered based on request size, messages count & time since last publish
+				BatchingSettings batchingSettings = BatchingSettings.newBuilder()
+					.setElementCountThreshold(messageCountBatchSize)
+					.setRequestByteThreshold(requestBytesThreshold)
+					.setDelayThreshold(publishDelayThreshold)
+					.build();
+				
 			  	publisher = Publisher
 			  		.newBuilder(topic)
+			  		.setBatchingSettings(batchingSettings)
 			  		.build();
 			  		
 			  	  // schedule publishing one message at a time : messages get automatically batched
@@ -90,6 +117,7 @@ public class PubSubHelper{
 		  		if (publisher != null) {
 			  		try{
 			    		publisher.shutdown();
+			    		publisher.awaitTermination(1, TimeUnit.MINUTES); //PublisherSnippets.java
 			    	}catch(Exception e){
 			    		System.out.print("Exception: ");
 	        			System.out.println(e.getMessage());
