@@ -161,7 +161,10 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 			.collect(Collectors.joining("&"));
 			
 			//LOG.info(payload + "&" + encode(headersPayload));
-			payload += "&" + encode(headers);
+			String attributes = String.join("&", "timestamp="+ Long.toString(timestampMillis), "uuid=" + uuid); 
+			String data = String.join("&", payload, encode(headers), encode(attributes));
+			//payload += "&" + encode(headers) + ;
+			//LOG.info(data);
 
 			PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
 				.putAllAttributes(
@@ -172,7 +175,7 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 					.build() 
 				)
 				//.setData(payload.toByteString())
-				.setData(ByteString.copyFromUtf8(payload))
+				.setData(ByteString.copyFromUtf8(data))
 				.build();
 
 			PubSubHelper.publishMessage(pubsubMessage, pubSubProjectId, stream);
