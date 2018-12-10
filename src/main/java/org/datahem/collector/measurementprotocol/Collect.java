@@ -53,7 +53,7 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.api.server.spi.config.Nullable;
 import com.google.api.server.spi.response.UnauthorizedException;
-
+import com.google.pubsub.v1.PubsubMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
@@ -78,6 +78,20 @@ import java.util.UUID;
 
 import com.google.apphosting.api.ApiProxy;
 import org.joda.time.Instant;
+
+//import java.net.URL;
+//import java.net.URLDecoder;
+import java.net.URLEncoder;
+//import java.util.Arrays;
+//import java.util.LinkedHashMap;
+//import java.util.regex.Pattern;
+//import java.util.stream.Collectors;
+//import java.util.AbstractMap.SimpleImmutableEntry;
+//import java.util.*;
+import java.io.UnsupportedEncodingException;
+//import java.net.MalformedURLException;
+import com.google.protobuf.ByteString;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * The Collect API which Endpoints will be exposing.
@@ -121,8 +135,16 @@ public class Collect {
 }
 // [END echo_method]
 
+private static String encode(Object decoded) {
+    	try {
+        	return decoded == null ? "" : URLEncoder.encode(String.valueOf(decoded), "UTF-8").replace("+", "%20");
+    	} catch(final UnsupportedEncodingException e) {
+        	throw new RuntimeException("Impossible: UTF-8 is a required encoding", e);
+    	}
+	}
+
 private static void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
-		List<CollectorPayloadEntity> collectorPayloadEntities = new ArrayList<>();
+		//List<CollectorPayloadEntity> collectorPayloadEntities = new ArrayList<>();
 		long timestampMillis = Instant.now().getMillis();
 
 		//Use application id to get project id (first remove region prefix, i.e. s~ or e~)
@@ -131,23 +153,29 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 		
 		Enumeration<String> headerNames = req.getHeaderNames();
 
-		Map<String, String> headers = Collections
+		String headers = Collections
 			.list(headerNames)
 			.stream()
 			.filter(s -> HEADERS.contains(s)) //Filter out sensitive fields and only keep those specified in HEADERS
-			.map(s -> new String[]{s, req.getHeader(s)})
-			.collect(Collectors.toMap(s -> s[0], s -> s[1]));
+			.map(s -> s + "=" + req.getHeader(s))
+			.collect(Collectors.joining("&"));
+			
+			//LOG.info(payload + "&" + encode(headersPayload));
+			payload += "&" + encode(headers);
 
-			//LOG.info(Arrays.toString(headers.entrySet().toArray()));
+			PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
+				.putAllAttributes(
+				ImmutableMap.<String, String>builder()
+					.put("timestamp", Long.toString(timestampMillis))
+					.put("stream", stream)
+					.put("uuid", uuid)
+					.build() 
+				)
+				//.setData(payload.toByteString())
+				.setData(ByteString.copyFromUtf8(payload))
+				.build();
 
-		CollectorPayloadEntity collectorPayloadEntity = CollectorPayloadEntity.newBuilder()
-			.setPayload(payload)
-			.putAllHeaders(headers)
-			.setEpochMillis(Long.toString(timestampMillis))
-			.setUuid(uuid)
-			.build();
+			PubSubHelper.publishMessage(pubsubMessage, pubSubProjectId, stream);
 
-		collectorPayloadEntities.add(collectorPayloadEntity);
-		PubSubHelper.publishMessages(collectorPayloadEntities, pubSubProjectId, stream);
 	}
 }

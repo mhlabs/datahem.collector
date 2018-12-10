@@ -65,10 +65,69 @@ import com.google.pubsub.v1.ProjectTopicName;
 public class PubSubHelper{
 	private static final Logger LOG = LoggerFactory.getLogger(PubSubHelper.class);
 
+	public static void publishMessage(PubsubMessage pubsubMessage, String pubSubProjectId, String pubSubTopicId) throws IOException{
+			Publisher publisher = null;
+			//List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
+
+			ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
+	
+			try {
+				// Batch settings control how the publisher batches messages
+				long requestBytesThreshold = 5000L; // default : 1kb
+				long messageCountBatchSize = 1L; // default : 100
+				Duration publishDelayThreshold = Duration.ofMillis(1); // default : 1 ms
+
+				// Publish request get triggered based on request size, messages count & time since last publish
+				/*BatchingSettings batchingSettings = BatchingSettings.newBuilder()
+					.setElementCountThreshold(messageCountBatchSize)
+					.setRequestByteThreshold(requestBytesThreshold)
+					.setDelayThreshold(publishDelayThreshold)
+					.build();*/
+				
+				publisher = Publisher
+					.newBuilder(topic)
+					//.setBatchingSettings(batchingSettings)
+					.build();
+
+				//LOG.info("pubsubMessage:" + pubsubMessage);
+				// Once published, returns a server-assigned message id (unique within the topic)
+				//publisher.publish(pubsubMessage); 
+				publisher.publish(pubsubMessage).get(); 
+				//publisher.publish(pubsubMessage).get(15, TimeUnit.SECONDS);
+				/*ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+ 					ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
+   						public void onSuccess(String messageId) {
+     						LOG.info("published with message id: " + messageId);
+   						}
+
+   						public void onFailure(Throwable t) {
+     						LOG.info("failed to publish: " + t);
+   						}
+ 					});*/
+				    //LOG.info(pubsubMessage.toString());
+			}
+			catch(Exception e){LOG.error("Exception: " + e.getMessage());}
+			finally {
+		  		if (publisher != null) {
+			  		try{
+			  			//LOG.info("shuting down");
+			    		publisher.shutdown();
+			    		publisher.awaitTermination(1, TimeUnit.MINUTES); //PublisherSnippets.java
+			    		//LOG.info("terminated");
+			    	}catch(Exception e){
+			    		System.out.print("Exception: ");
+	        			System.out.println(e.getMessage());
+			    	}
+			  } 
+			}
+		}
+
+
+
 	public static void publishMessages(List<CollectorPayloadEntity> collectorPayloadEntities, String pubSubProjectId, String pubSubTopicId) throws IOException{
 			Publisher publisher = null;
 			//List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
-			LOG.info("pubSubProjectId:" + pubSubProjectId + ", pubSubTopicId:" + pubSubTopicId);
+			//LOG.info("pubSubProjectId:" + pubSubProjectId + ", pubSubTopicId:" + pubSubTopicId);
 			/*
 			ProjectTopicName topic = ProjectTopicName.newBuilder()
 				.setProject(pubSubProjectId)
@@ -109,9 +168,10 @@ public class PubSubHelper{
 	                    )
 	                    .setData(collectorPayloadEntity.toByteString())
 						.build();
-						LOG.info("pubsubMessage:" + pubsubMessage);
+						//LOG.info("pubsubMessage:" + pubsubMessage);
 				    // Once published, returns a server-assigned message id (unique within the topic)
-				    publisher.publish(pubsubMessage).get();
+				    //publisher.publish(pubsubMessage).get(); 
+				    publisher.publish(pubsubMessage).get(15, TimeUnit.SECONDS);
 				    /*ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
  					ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
    						public void onSuccess(String messageId) {
@@ -122,17 +182,17 @@ public class PubSubHelper{
      						LOG.info("failed to publish: " + t);
    						}
  					});*/
-				    LOG.info("published");
+				    //LOG.info("published");
 				}
 			}
 			catch(Exception e){LOG.error("Exception: " + e.getMessage());}
 			finally {
 		  		if (publisher != null) {
 			  		try{
-			  			LOG.info("shuting down");
+			  			//LOG.info("shuting down");
 			    		publisher.shutdown();
 			    		publisher.awaitTermination(1, TimeUnit.MINUTES); //PublisherSnippets.java
-			    		LOG.info("terminated");
+			    		//LOG.info("terminated");
 			    	}catch(Exception e){
 			    		System.out.print("Exception: ");
 	        			System.out.println(e.getMessage());
