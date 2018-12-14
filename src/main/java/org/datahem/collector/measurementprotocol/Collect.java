@@ -125,7 +125,7 @@ public class Collect {
 // [END collect_post]
 
 // [START echo_method]
-	@ApiMethod(name = "get", path = "collect/{stream}", httpMethod = ApiMethod.HttpMethod.GET)
+	@ApiMethod(name = "get", path = "collect/{stream}/collect.gif", httpMethod = ApiMethod.HttpMethod.GET)
 	public void collect_get(HttpServletRequest req, @Named("stream") String stream) throws IOException{
 		String payload = req.getQueryString();
 		if (!"".equals(payload)) {
@@ -157,21 +157,21 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 			.list(headerNames)
 			.stream()
 			.filter(s -> HEADERS.contains(s)) //Filter out sensitive fields and only keep those specified in HEADERS
-			.map(s -> s + "=" + req.getHeader(s))
+			.map(s -> encode(s) + "=" + encode(req.getHeader(s)))
 			.collect(Collectors.joining("&"));
 			
 			//LOG.info(payload + "&" + encode(headersPayload));
-			String attributes = String.join("&", "timestamp="+ Long.toString(timestampMillis), "uuid=" + uuid); 
-			String data = String.join("&", payload, encode(headers), encode(attributes));
+			String attributes = String.join("&", "timestamp=" + Long.toString(timestampMillis), "uuid=" + encode(uuid)); 
+			String data = String.join("&", payload, headers, attributes);
 			//payload += "&" + encode(headers) + ;
 			//LOG.info(data);
 
 			PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
 				.putAllAttributes(
 				ImmutableMap.<String, String>builder()
-					.put("timestamp", Long.toString(timestampMillis))
-					.put("stream", stream)
-					.put("uuid", uuid)
+					.put("MessageTimestamp", Long.toString(timestampMillis))
+					.put("MessageStream", stream)
+					.put("MessageUuid", uuid)
 					.build() 
 				)
 				//.setData(payload.toByteString())

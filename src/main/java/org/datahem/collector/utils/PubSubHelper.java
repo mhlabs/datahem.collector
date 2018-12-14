@@ -106,7 +106,7 @@ public class PubSubHelper{
  					});*/
 				    //LOG.info(pubsubMessage.toString());
 			}
-			catch(Exception e){LOG.error("Exception: " + e.getMessage());}
+			catch(Exception e){LOG.error("uuid: " + pubsubMessage.getAttributes().get("MessageUuid") + ", Message: " + pubsubMessage.toString() + " Exception: " + e.getMessage());}
 			finally {
 		  		if (publisher != null) {
 			  		try{
