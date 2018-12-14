@@ -6,7 +6,6 @@
   <!-- [START env_variables] -->
     <env-variables>
         <env-var name="ENDPOINTS_SERVICE_NAME" value="${endpoints.project.id}.appspot.com" />
-        <!--<env-var name="ENDPOINTS_SERVICE_NAME" value="mathem-ml-datahem-test.appspot.com" />-->
     </env-variables>
     <!-- [END env_variables] -->
 

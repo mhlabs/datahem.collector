@@ -53,21 +53,22 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.api.server.spi.config.Nullable;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.apphosting.api.ApiProxy;
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
+import com.google.pubsub.v1.PubsubMessage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 
-import org.datahem.protobuf.collector.v1.CollectorPayloadEntityProto.*;
-import org.datahem.collector.utils.PubSubHelper;
+import java.net.URLEncoder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -76,8 +77,12 @@ import java.util.stream.Stream;
 import java.util.Enumeration;
 import java.util.UUID;
 
-import com.google.apphosting.api.ApiProxy;
 import org.joda.time.Instant;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.datahem.collector.utils.PubSubHelper;
 
 /**
  * The Collect API which Endpoints will be exposing.
@@ -105,24 +110,29 @@ public class Collect {
   // [START collect_post]
 	@ApiMethod(name = "post", path = "collect/{stream}", httpMethod = ApiMethod.HttpMethod.POST)
 	public void collect_post(HttpServletRequest req, Payload payload, @Named("stream") String stream) throws IOException {
-		//LOG.info("payload: " + payload.getPayload());
 		buildCollectorPayload(payload.getPayload(), req, stream);
 	}
 // [END collect_post]
 
 // [START echo_method]
-	@ApiMethod(name = "get", path = "collect/{stream}", httpMethod = ApiMethod.HttpMethod.GET)
+	@ApiMethod(name = "get", path = "collect/{stream}/collect.gif", httpMethod = ApiMethod.HttpMethod.GET)
 	public void collect_get(HttpServletRequest req, @Named("stream") String stream) throws IOException{
 		String payload = req.getQueryString();
 		if (!"".equals(payload)) {
-			//LOG.info("payload: " + payload);
 			buildCollectorPayload(payload, req, stream);
 		}
 }
 // [END echo_method]
 
+private static String encode(Object decoded) {
+		try {
+			return decoded == null ? "" : URLEncoder.encode(String.valueOf(decoded), "UTF-8").replace("+", "%20");
+		} catch(final UnsupportedEncodingException e) {
+			throw new RuntimeException("Impossible: UTF-8 is a required encoding", e);
+		}
+	}
+
 private static void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
-		List<CollectorPayloadEntity> collectorPayloadEntities = new ArrayList<>();
 		long timestampMillis = Instant.now().getMillis();
 
 		//Use application id to get project id (first remove region prefix, i.e. s~ or e~)
@@ -131,23 +141,27 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 		
 		Enumeration<String> headerNames = req.getHeaderNames();
 
-		Map<String, String> headers = Collections
+		String headers = Collections
 			.list(headerNames)
 			.stream()
 			.filter(s -> HEADERS.contains(s)) //Filter out sensitive fields and only keep those specified in HEADERS
-			.map(s -> new String[]{s, req.getHeader(s)})
-			.collect(Collectors.toMap(s -> s[0], s -> s[1]));
+			.map(s -> encode(s) + "=" + encode(req.getHeader(s)))
+			.collect(Collectors.joining("&"));
+			
+			String attributes = String.join("&", "timestamp=" + Long.toString(timestampMillis), "uuid=" + encode(uuid)); 
+			String data = String.join("&", payload, headers, attributes); //Add request headers, timestamp and uuid to payload
 
-			LOG.info(Arrays.toString(headers.entrySet().toArray()));
+			PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
+				.putAllAttributes(
+				ImmutableMap.<String, String>builder()
+					.put("MessageTimestamp", Long.toString(timestampMillis))
+					.put("MessageStream", stream)
+					.put("MessageUuid", uuid)
+					.build() 
+				)
+				.setData(ByteString.copyFromUtf8(data))
+				.build();
 
-		CollectorPayloadEntity collectorPayloadEntity = CollectorPayloadEntity.newBuilder()
-			.setPayload(payload)
-			.putAllHeaders(headers)
-			.setEpochMillis(Long.toString(timestampMillis))
-			.setUuid(uuid)
-			.build();
-
-		collectorPayloadEntities.add(collectorPayloadEntity);
-		PubSubHelper.publishMessages(collectorPayloadEntities, pubSubProjectId, stream);
+			PubSubHelper.publishMessage(pubsubMessage, pubSubProjectId, stream);
 	}
 }
