@@ -26,178 +26,50 @@ package org.datahem.collector.utils;
  * =========================LICENSE_END==================================
  */
 
-
-
-
-
-
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutures;
-import com.google.api.core.ApiFutureCallback;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import com.google.protobuf.ByteString;
-
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PublisherGrpc;
 import com.google.pubsub.v1.PublishRequest;
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.pubsub.v1.TopicName;
-
-import org.datahem.protobuf.collector.v1.CollectorPayloadEntityProto.*;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.gax.batching.BatchingSettings;
-import java.util.concurrent.TimeUnit;
 import org.threeten.bp.Duration;
-
-import com.google.pubsub.v1.ProjectTopicName;
 
 public class PubSubHelper{
 	private static final Logger LOG = LoggerFactory.getLogger(PubSubHelper.class);
 
 	public static void publishMessage(PubsubMessage pubsubMessage, String pubSubProjectId, String pubSubTopicId) throws IOException{
 			Publisher publisher = null;
-			//List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
-
 			ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
 	
 			try {
-				// Batch settings control how the publisher batches messages
-				long requestBytesThreshold = 5000L; // default : 1kb
-				long messageCountBatchSize = 1L; // default : 100
-				Duration publishDelayThreshold = Duration.ofMillis(1); // default : 1 ms
-
-				// Publish request get triggered based on request size, messages count & time since last publish
-				/*BatchingSettings batchingSettings = BatchingSettings.newBuilder()
-					.setElementCountThreshold(messageCountBatchSize)
-					.setRequestByteThreshold(requestBytesThreshold)
-					.setDelayThreshold(publishDelayThreshold)
-					.build();*/
-				
 				publisher = Publisher
 					.newBuilder(topic)
-					//.setBatchingSettings(batchingSettings)
 					.build();
-
-				//LOG.info("pubsubMessage:" + pubsubMessage);
-				// Once published, returns a server-assigned message id (unique within the topic)
-				//publisher.publish(pubsubMessage); 
+					
 				publisher.publish(pubsubMessage).get(); 
-				//publisher.publish(pubsubMessage).get(15, TimeUnit.SECONDS);
-				/*ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
- 					ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
-   						public void onSuccess(String messageId) {
-     						LOG.info("published with message id: " + messageId);
-   						}
-
-   						public void onFailure(Throwable t) {
-     						LOG.info("failed to publish: " + t);
-   						}
- 					});*/
-				    //LOG.info(pubsubMessage.toString());
 			}
 			catch(Exception e){LOG.error("uuid: " + pubsubMessage.getAttributes().get("MessageUuid") + ", Message: " + pubsubMessage.toString() + " Exception: " + e.getMessage());}
 			finally {
-		  		if (publisher != null) {
-			  		try{
-			  			//LOG.info("shuting down");
-			    		publisher.shutdown();
-			    		publisher.awaitTermination(1, TimeUnit.MINUTES); //PublisherSnippets.java
-			    		//LOG.info("terminated");
-			    	}catch(Exception e){
-			    		System.out.print("Exception: ");
-	        			System.out.println(e.getMessage());
-			    	}
-			  } 
-			}
-		}
-
-
-
-	public static void publishMessages(List<CollectorPayloadEntity> collectorPayloadEntities, String pubSubProjectId, String pubSubTopicId) throws IOException{
-			Publisher publisher = null;
-			//List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
-			//LOG.info("pubSubProjectId:" + pubSubProjectId + ", pubSubTopicId:" + pubSubTopicId);
-			/*
-			ProjectTopicName topic = ProjectTopicName.newBuilder()
-				.setProject(pubSubProjectId)
-				.setTopic(pubSubTopicId)
-				.build();*/
-			ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
-			//String topic = "projects/"+ pubSubProjectId +"/topics/" + pubSubTopicId;
-			//TopicName topic = TopicName.create(pubSubProjectId, pubSubTopicId);
-	
-			try {
-				// Batch settings control how the publisher batches messages
-				long requestBytesThreshold = 5000L; // default : 1kb
-				long messageCountBatchSize = 1L; // default : 100
-				Duration publishDelayThreshold = Duration.ofMillis(1); // default : 1 ms
-
-				// Publish request get triggered based on request size, messages count & time since last publish
-				/*BatchingSettings batchingSettings = BatchingSettings.newBuilder()
-					.setElementCountThreshold(messageCountBatchSize)
-					.setRequestByteThreshold(requestBytesThreshold)
-					.setDelayThreshold(publishDelayThreshold)
-					.build();*/
-				
-			  	publisher = Publisher
-			  		.newBuilder(topic)
-			  		//.setBatchingSettings(batchingSettings)
-			  		.build();
-			  		
-			  	  // schedule publishing one message at a time : messages get automatically batched
-				for (CollectorPayloadEntity collectorPayloadEntity : collectorPayloadEntities) {
-					PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
-	               		.putAllAttributes(
-	               			ImmutableMap.<String, String>builder()
-	               				.put("timestamp", collectorPayloadEntity.getEpochMillis())
-	               				.put("pubSubProjectId", pubSubProjectId)
-	               				.put("pubSubTopicId", pubSubTopicId)
-	               				.put("uuid", collectorPayloadEntity.getUuid())
-	               				.build() 
-	                    )
-	                    .setData(collectorPayloadEntity.toByteString())
-						.build();
-						//LOG.info("pubsubMessage:" + pubsubMessage);
-				    // Once published, returns a server-assigned message id (unique within the topic)
-				    //publisher.publish(pubsubMessage).get(); 
-				    publisher.publish(pubsubMessage).get(15, TimeUnit.SECONDS);
-				    /*ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
- 					ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
-   						public void onSuccess(String messageId) {
-     						LOG.info("published with message id: " + messageId);
-   						}
-
-   						public void onFailure(Throwable t) {
-     						LOG.info("failed to publish: " + t);
-   						}
- 					});*/
-				    //LOG.info("published");
+				if (publisher != null) {
+					try{
+						publisher.shutdown();
+						publisher.awaitTermination(1, TimeUnit.MINUTES);
+					}catch(Exception e){
+						LOG.error("Exception: "+ e.getMessage());
+					}
 				}
-			}
-			catch(Exception e){LOG.error("Exception: " + e.getMessage());}
-			finally {
-		  		if (publisher != null) {
-			  		try{
-			  			//LOG.info("shuting down");
-			    		publisher.shutdown();
-			    		publisher.awaitTermination(1, TimeUnit.MINUTES); //PublisherSnippets.java
-			    		//LOG.info("terminated");
-			    	}catch(Exception e){
-			    		System.out.print("Exception: ");
-	        			System.out.println(e.getMessage());
-			    	}
-			  } 
 			}
 		}
 }
