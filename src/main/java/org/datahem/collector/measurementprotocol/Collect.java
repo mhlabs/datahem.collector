@@ -57,6 +57,8 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.cloud.pubsub.v1.Publisher;
+import com.google.pubsub.v1.ProjectTopicName;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -81,8 +83,6 @@ import org.joda.time.Instant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.datahem.collector.utils.PubSubHelper;
 
 /**
  * The Collect API which Endpoints will be exposing.
@@ -132,7 +132,7 @@ private static String encode(Object decoded) {
 		}
 	}
 
-private static void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
+private void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
 		long timestampMillis = Instant.now().getMillis();
 
 		//Use application id to get project id (first remove region prefix, i.e. s~ or e~)
@@ -148,20 +148,30 @@ private static void buildCollectorPayload(String payload, HttpServletRequest req
 			.map(s -> encode(s) + "=" + encode(req.getHeader(s)))
 			.collect(Collectors.joining("&"));
 			
-			String attributes = String.join("&", "timestamp=" + Long.toString(timestampMillis), "uuid=" + encode(uuid)); 
-			String data = String.join("&", payload, headers, attributes); //Add request headers, timestamp and uuid to payload
+		String attributes = String.join("&", "timestamp=" + Long.toString(timestampMillis), "uuid=" + encode(uuid)); 
+		String data = String.join("&", payload, headers, attributes); //Add request headers, timestamp and uuid to payload
 
-			PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
-				.putAllAttributes(
-				ImmutableMap.<String, String>builder()
-					.put("MessageTimestamp", Long.toString(timestampMillis))
-					.put("MessageStream", stream)
-					.put("MessageUuid", uuid)
-					.build() 
-				)
-				.setData(ByteString.copyFromUtf8(data))
-				.build();
+		PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
+			.putAllAttributes(
+			ImmutableMap.<String, String>builder()
+				.put("MessageTimestamp", Long.toString(timestampMillis))
+				.put("MessageStream", stream)
+				.put("MessageUuid", uuid)
+				.build() 
+			)
+			.setData(ByteString.copyFromUtf8(data))
+			.build();
 
-			PubSubHelper.publishMessage(pubsubMessage, pubSubProjectId, stream);
+		publishMessage(pubsubMessage, pubSubProjectId, stream);
+	}
+	
+	private void publishMessage(PubsubMessage pubsubMessage, String pubSubProjectId, String pubSubTopicId) throws IOException{
+		Publisher publisher = PubSubClient.getPublisher(pubSubProjectId, pubSubTopicId);
+		try {
+			publisher.publish(pubsubMessage);
+		}
+		catch(Exception e){
+			LOG.error("uuid: " + pubsubMessage.getAttributes().get("MessageUuid") + ", Message: " + pubsubMessage.toString() + " Exception: " + e.getMessage());
+		}
 	}
 }
