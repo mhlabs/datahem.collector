@@ -166,7 +166,8 @@ private void buildCollectorPayload(String payload, HttpServletRequest req, Strin
 	}
 	
 	private void publishMessage(PubsubMessage pubsubMessage, String pubSubProjectId, String pubSubTopicId) throws IOException{
-		Publisher publisher = PubSubClient.getPublisher(pubSubProjectId, pubSubTopicId);
+		//Publisher publisher = PubSubClient.getPublisher(pubSubProjectId, pubSubTopicId);
+		Publisher publisher = PubSubClient.getPublisher(pubSubTopicId);
 		try {
 			publisher.publish(pubsubMessage);
 		}
