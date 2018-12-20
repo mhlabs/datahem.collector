@@ -1,19 +1,3 @@
-/*
- * Copyright 2016 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.datahem.collector.measurementprotocol;
 
 /*-
@@ -134,39 +118,35 @@ private static String encode(Object decoded) {
 
 private void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
 		long timestampMillis = Instant.now().getMillis();
-
+		String uuid = UUID.randomUUID().toString();
+        
 		//Use application id to get project id (first remove region prefix, i.e. s~ or e~)
 		String pubSubProjectId = ApiProxy.getCurrentEnvironment().getAppId().replaceFirst("^[a-zA-Z]~", "");
-		String uuid = UUID.randomUUID().toString();
-		
 		Enumeration<String> headerNames = req.getHeaderNames();
 
-		String headers = Collections
+        Map<String, String> headers = Collections
 			.list(headerNames)
 			.stream()
 			.filter(s -> HEADERS.contains(s)) //Filter out sensitive fields and only keep those specified in HEADERS
-			.map(s -> encode(s) + "=" + encode(req.getHeader(s)))
-			.collect(Collectors.joining("&"));
-			
-		String attributes = String.join("&", "timestamp=" + Long.toString(timestampMillis), "uuid=" + encode(uuid)); 
-		String data = String.join("&", payload, headers, attributes); //Add request headers, timestamp and uuid to payload
+			.map(s -> new String[]{s, req.getHeader(s)})
+			.collect(Collectors.toMap(s -> s[0], s -> s[1]));
 
 		PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
 			.putAllAttributes(
 			ImmutableMap.<String, String>builder()
+                .putAll(headers)
 				.put("MessageTimestamp", Long.toString(timestampMillis))
 				.put("MessageStream", stream)
 				.put("MessageUuid", uuid)
-				.build() 
+				.build()
 			)
-			.setData(ByteString.copyFromUtf8(data))
+			.setData(ByteString.copyFromUtf8(payload))
 			.build();
 
 		publishMessage(pubsubMessage, pubSubProjectId, stream);
 	}
 	
 	private void publishMessage(PubsubMessage pubsubMessage, String pubSubProjectId, String pubSubTopicId) throws IOException{
-		//Publisher publisher = PubSubClient.getPublisher(pubSubProjectId, pubSubTopicId);
 		Publisher publisher = PubSubClient.getPublisher(pubSubTopicId);
 		try {
 			publisher.publish(pubsubMessage);
