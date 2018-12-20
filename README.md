@@ -3,6 +3,10 @@
 Collect data sent from trackers and publish the data on pubsub, currently running on Google App Engine Standard (Java8) and Cloud Endpoints.
 
 ## Version
+## 0.9.0 (2018-12-20): Cache and expire publishers and MP headers in pubsub message attributes
+Cache and expire publishers to avoid orphaned grpc channels while utilizing the high performance of "long lived" publishers.
+Swithed from appending request headers to request body to adding headers to pubsub attributes.
+
 ## 0.8.1 (2018-12-18): Long lived publisher
 Changed from creating and shutting down publishers with each call to longlived publishers created by context listener. Reduced deadline exceptions and response latency substantially. Less instances required to server the same amount of traffic.
 
