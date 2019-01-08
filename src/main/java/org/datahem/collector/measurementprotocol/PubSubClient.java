@@ -123,28 +123,11 @@ public class PubSubClient implements ServletContextListener {
 	}
 
 /*
-	static Publisher getPublisher(String pubSubProjectId, String pubSubTopicId){
-		Publisher publisher = null;
-		try{
-			connect();
-			publisher = publishers.get(pubSubTopicId);
-			if(publisher == null){
-				ProjectTopicName topic = ProjectTopicName.of(pubSubProjectId, pubSubTopicId);
-				publisher = Publisher
-					.newBuilder(topic)
-					.build();
-				publishers.put(pubSubTopicId,publisher);
-			}
-
-		}catch (Exception e) {
-			if (sc != null) {
-				sc.log("PubSubClient getPublisher error ", e);
-			}
-			LOG.error("PubSubClient getPublisher error ", e);
-		}
-		return publisher;
-	}
-*/
+LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
+  public void shutdown() {
+    publishers.invalidateAll();
+  }
+});*/
 
 	@Override
 	public void contextInitialized(ServletContextEvent event) {

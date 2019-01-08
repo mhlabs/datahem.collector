@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
  */
 // [START collect_api_annotation]
 @Api(
-    name = "measurementprotocol",
+    name = "collect",
     version = "v1",
     namespace =
     @ApiNamespace(
@@ -89,24 +89,32 @@ public class Collect {
 	private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent").collect(Collectors.toList());
 
   /**
-   * Collects data, converts it into protobuf and publish on pubSub. Returns 204 on success.
+   * Collects data and publish on pubSub. Returns 204 on success.
    */
-  // [START collect_post]
-	@ApiMethod(name = "post", path = "collect/{stream}", httpMethod = ApiMethod.HttpMethod.POST)
-	public void collect_post(HttpServletRequest req, Payload payload, @Named("stream") String stream) throws IOException {
+    // [START collect_post]
+	@ApiMethod(name = "open_post", path = "open/{stream}", httpMethod = ApiMethod.HttpMethod.POST)
+	public void _open_post(HttpServletRequest req, Payload payload, @Named("stream") String stream) throws IOException {
 		buildCollectorPayload(payload.getPayload(), req, stream);
 	}
-// [END collect_post]
+    // [END collect_post]
 
-// [START echo_method]
-	@ApiMethod(name = "get", path = "collect/{stream}/collect.gif", httpMethod = ApiMethod.HttpMethod.GET)
-	public void collect_get(HttpServletRequest req, @Named("stream") String stream) throws IOException{
+    // [START collect_get_gif]
+	@ApiMethod(name = "open_get_gif", path = "open/{stream}/collect.gif", httpMethod = ApiMethod.HttpMethod.GET)
+	public void _open_get_gif(HttpServletRequest req, @Named("stream") String stream) throws IOException{
 		String payload = req.getQueryString();
 		if (!"".equals(payload)) {
 			buildCollectorPayload(payload, req, stream);
 		}
-}
-// [END echo_method]
+    }
+    // [END collect_get_gif]
+
+    // [START collect_restricted_post]
+    //"${HOST}/_ah/api/collect/v1/restricted/${STREAM_NAME}?key=${API_KEY}"
+	@ApiMethod(name = "restricted_post", path = "restricted/{stream}", httpMethod = ApiMethod.HttpMethod.POST, apiKeyRequired = AnnotationBoolean.TRUE)
+	public void _restricted_post(HttpServletRequest req, Payload payload, @Named("stream") String stream) throws IOException {
+		buildCollectorPayload(payload.getPayload(), req, stream);
+	}
+    // [END collect_restricted_post]
 
 private static String encode(Object decoded) {
 		try {
