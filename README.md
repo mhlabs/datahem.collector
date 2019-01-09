@@ -3,6 +3,10 @@
 Collect data sent from trackers and publish the data on pubsub, currently running on Google App Engine Standard (Java8) and Cloud Endpoints.
 
 ## Version
+## 0.10.0 (2019-01-09): Restricted access with API keys and new api method paths
+Added method for restricted access (POST) with API keys to enable control over webhooks to post data to the collector endpoint.
+Changed naming of API method (name and path) to reflect usage, i.e. open vs restricted.
+
 ## 0.9.0 (2018-12-20): Cache and expire publishers and MP headers in pubsub message attributes
 Cache and expire publishers to avoid orphaned grpc channels while utilizing the high performance of "long lived" publishers.
 Swithed from appending request headers to request body to adding headers to pubsub attributes.
