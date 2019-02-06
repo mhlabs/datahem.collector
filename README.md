@@ -3,6 +3,9 @@
 Collect data sent from trackers and publish the data on pubsub, currently running on Google App Engine Standard (Java8) and Cloud Endpoints.
 
 ## Version
+## 0.10.1 (2019-01-09): Shutdownhook to close publishers
+Added shutdown hook to gracefully shutdown publishers when java runtime is shutting down.
+
 ## 0.10.0 (2019-01-09): Restricted access with API keys and new api method paths
 Added method for restricted access (POST) with API keys to enable control over webhooks to post data to the collector endpoint.
 Changed naming of API method (name and path) to reflect usage, i.e. open vs restricted.
