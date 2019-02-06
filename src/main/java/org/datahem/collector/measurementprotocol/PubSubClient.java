@@ -32,6 +32,8 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
+import com.google.appengine.api.LifecycleManager;
+import com.google.appengine.api.LifecycleManager.ShutdownHook;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.ProjectTopicName;
 
@@ -72,7 +74,6 @@ public class PubSubClient implements ServletContextListener {
 						publisher = Publisher
 							.newBuilder(topic)
 							.build();
-						//LOG.info("publisher: " + publisher.toString());
 						LOG.info("Cache load: " + publisher.getTopicNameString() + ", ref: " + publisher.toString());
 					}catch (Exception e) {
 						LOG.error("PubSubClient Connect load error ", e);
@@ -98,7 +99,6 @@ public class PubSubClient implements ServletContextListener {
 				}
 			};
 			
-			//publishers = new HashMap<String,Publisher>();
 			publishers = CacheBuilder
 				.newBuilder()
 				.maximumSize(1000)
@@ -112,27 +112,24 @@ public class PubSubClient implements ServletContextListener {
 		Publisher publisher = null;
 		try{
 			connect();
-			//publisher = publishers.get(pubSubTopicId);
-			//LOG.info("pubSubTopic: " + pubSubTopicId);
 			publisher = publishers.get(pubSubTopicId);
-			//LOG.info("publisher: " + publisher.toString());
 		}catch (Exception e) {
 			LOG.error("PubSubClient getPublisher error ", e);
 		}
 		return publisher;
 	}
 
-/*
-LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
-  public void shutdown() {
-    publishers.invalidateAll();
-  }
-});*/
-
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
 		try {
 			connect();
+            //Set up hook to gracefully shutdown publishers when java runtime is shutting down
+            LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
+                public void shutdown() {
+                    LOG.info("Executing LifecycleManager shutdownHook to shut down publishers");
+                    publishers.invalidateAll();
+                }
+            });
 		} catch (Exception e) {
 			LOG.error("PubSubClient contextInitialized error ", e);
 		}
@@ -142,21 +139,5 @@ LifecycleManager.getInstance().setShutdownHook(new ShutdownHook() {
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
 	// App Engine does not currently invoke this method.
 		publishers.invalidateAll();
-		/*
-		publishers.forEach((topic,publisher) -> {
-			if (publisher != null) {
-				try{
-					publisher.shutdown();
-					publisher.awaitTermination(20, TimeUnit.SECONDS);
-					publisher = null;
-				}catch(Exception e){
-					if (sc != null) {
-						sc.log("PubSubClient contextDestroyed error ", e);
-					}
-				}
-			}
-		});
-		publishers = null;
-		*/
 	}
 }
