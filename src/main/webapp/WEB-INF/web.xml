@@ -6,6 +6,18 @@
   http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
   
 
+    <!-- Servlet without endpoints framework to respond with a gif-file -->
+    <servlet>
+        <servlet-name>GifServlet</servlet-name>
+        <servlet-class>org.datahem.collector.GifServlet</servlet-class>
+    </servlet>
+  
+  <!-- one servlet-mapping per source -->
+  <servlet-mapping>
+    <servlet-name>GifServlet</servlet-name>
+    <url-pattern>/gif/</url-pattern>
+  </servlet-mapping>
+
     <!-- Wrap the backend with Endpoints Frameworks v2. -->
     <servlet>
         <servlet-name>EndpointsServlet</servlet-name>
@@ -13,7 +25,7 @@
         <init-param>
             <param-name>services</param-name>
             <!--<param-value>org.datahem.echo.Echo</param-value>-->
-            <param-value>org.datahem.collector.measurementprotocol.Collect</param-value>
+            <param-value>org.datahem.collector.Collect</param-value>
         </init-param>
     </servlet>
     <!-- Route API method requests to the backend. -->
