@@ -4,29 +4,18 @@ package org.datahem.collector.measurementprotocol;
  * ========================LICENSE_START=================================
  * DataHem
  * %%
- * Copyright (C) 2018 Robert Sahlin and MatHem Sverige AB
+ * Copyright (C) 2018 - 2019 Robert Sahlin
  * %%
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
  * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
  * =========================LICENSE_END==================================
  */
 
-/*
+
+
 import com.google.api.server.spi.auth.EspAuthenticator;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.AnnotationBoolean;
@@ -38,9 +27,7 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.api.server.spi.config.Nullable;
 import com.google.api.server.spi.response.UnauthorizedException;
-*/
 import com.google.apphosting.api.ApiProxy;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
@@ -48,17 +35,12 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.ProjectTopicName;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
 
 import java.net.URLEncoder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,36 +58,53 @@ import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("serial")
-@WebServlet(
-	name = "gifservlet",
-	description = "Collect get-hits and put on pubsub")
-public class GifServlet extends HttpServlet {
-	private static final Logger LOG = LoggerFactory.getLogger(GifServlet.class);
+/**
+ * The Collect API which Endpoints will be exposing.
+ */
+// [START collect_api_annotation]
+@Api(
+    name = "collect",
+    version = "v1",
+    namespace =
+    @ApiNamespace(
+        ownerDomain = "datahem.org",
+        ownerName = "datahem.org",
+        packagePath = ""
+    )
+)
+// [END echo_api_annotation]
+
+public class Collect {
+	private static final Logger LOG = LoggerFactory.getLogger(Collect.class);
 	private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent").collect(Collectors.toList());
 
-    // [START collect_get_gif]
+  /**
+   * Collects data and publish on pubSub. Returns 204 on success.
+   */
+    // [START collect_post]
+	@ApiMethod(name = "open_post", path = "open/{stream}", httpMethod = ApiMethod.HttpMethod.POST)
+	public void _open_post(HttpServletRequest req, Payload payload, @Named("stream") String stream) throws IOException {
+		buildCollectorPayload(payload.getPayload(), req, stream);
+	}
+    // [END collect_post]
 
-    public final void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
+    // [START collect_get_gif]
+	@ApiMethod(name = "open_get_gif", path = "open/{stream}/collect.gif", httpMethod = ApiMethod.HttpMethod.GET)
+	public void _open_get_gif(HttpServletRequest req, @Named("stream") String stream) throws IOException{
 		String payload = req.getQueryString();
-        String stream = req.getParameter("cstream");
 		if (!"".equals(payload)) {
 			buildCollectorPayload(payload, req, stream);
 		}
-        byte[] trackingGif = { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x1, 0x0, 0x1, 0x0, (byte) 0x80, 0x0, 0x0,
-            (byte) 0xff, (byte) 0xff, (byte) 0xff, 0x0, 0x0, 0x0, 0x2c, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1, 0x0,
-            0x0, 0x2, 0x2, 0x44, 0x1, 0x0, 0x3b };
-
-    	resp.setContentType("image/gif");
-    	resp.setContentLength(trackingGif.length);
-
-    	OutputStream out = resp.getOutputStream();
-    	out.write(trackingGif);
-    	out.close();
     }
     // [END collect_get_gif]
 
-
+    // [START collect_restricted_post]
+    //"${HOST}/_ah/api/collect/v1/restricted/${STREAM_NAME}?key=${API_KEY}"
+	@ApiMethod(name = "restricted_post", path = "restricted/{stream}", httpMethod = ApiMethod.HttpMethod.POST, apiKeyRequired = AnnotationBoolean.TRUE)
+	public void _restricted_post(HttpServletRequest req, Payload payload, @Named("stream") String stream) throws IOException {
+		buildCollectorPayload(payload.getPayload(), req, stream);
+	}
+    // [END collect_restricted_post]
 
 private static String encode(Object decoded) {
 		try {

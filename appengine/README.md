@@ -3,6 +3,9 @@
 Collect data sent from trackers and publish the data on pubsub, currently running on Google App Engine Standard (Java8) and Cloud Endpoints.
 
 ## Version
+## 0.10.3 (2019-03-22): AGPL 3.0 or later
+License is AGPL 3.0 or later
+
 ## 0.10.2 (2019-01-09): Gif servlet
 Added ordinary servlet (not endpoint framework) to respond with a transparent gif on image get requests to ensure correct response code.
 

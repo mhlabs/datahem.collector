@@ -11,7 +11,7 @@
   <name>DataHem</name>
   <inceptionYear>2018</inceptionYear>
   <organization>
-  	<name>MatHem Sverige AB</name>
+  	<name>Robert Sahlin</name>
   </organization>
   
   <prerequisites>
@@ -32,9 +32,10 @@
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	<java.version>1.8</java.version>
-	<license.copyrightOwners>Robert Sahlin and MatHem Sverige AB</license.copyrightOwners>
-	<license.licenseName>mit</license.licenseName>
+	<license.copyrightOwners>Robert Sahlin</license.copyrightOwners>
 	<license.licenceFile>LICENSE</license.licenceFile>
+    <license.licenseName>agpl_v3_later</license.licenseName>
+    <license.licenseResolver>${project.baseUri}/src/license</license.licenseResolver>
   </properties>
   
   <reporting>
