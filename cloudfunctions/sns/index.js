@@ -123,7 +123,6 @@ exports.receiveNotification = function receiveNotification (req, res) {
             console.error("topic query param undefined");
             res.status(400).end('topic query param undefined');    
         }
-        
         break;
       default:
         console.error('should not have gotten to default block');
