@@ -9,7 +9,7 @@
     <!-- Servlet without endpoints framework to respond with a gif-file -->
     <servlet>
         <servlet-name>GifServlet</servlet-name>
-        <servlet-class>org.datahem.collector.GifServlet</servlet-class>
+        <servlet-class>org.datahem.collector.measurementprotocol.GifServlet</servlet-class>
     </servlet>
   
   <!-- one servlet-mapping per source -->
@@ -25,7 +25,7 @@
         <init-param>
             <param-name>services</param-name>
             <!--<param-value>org.datahem.echo.Echo</param-value>-->
-            <param-value>org.datahem.collector.Collect</param-value>
+            <param-value>org.datahem.collector.measurementprotocol.Collect</param-value>
         </init-param>
     </servlet>
     <!-- Route API method requests to the backend. -->

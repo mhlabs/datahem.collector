@@ -3,6 +3,13 @@
 Collect data sent from trackers and publish the data on pubsub, currently running on Google App Engine Standard (Java8) and Cloud Endpoints.
 
 ## Version
+## 0.10.3 (2019-04-03): Append request headers to payload
+Appending request headers to payload instead of pubsub attributes to keep attributes clean.
+Changed naming of attributes fields:
+- timestamp (previously messageTimestamp, now utc timestamp intead of epoch millis)
+- uuid (previously messgeUuid)
+- source (previously messageTopic)
+
 ## 0.10.3 (2019-03-22): AGPL 3.0 or later
 License is AGPL 3.0 or later
 
