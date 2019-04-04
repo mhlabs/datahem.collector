@@ -138,7 +138,8 @@ private void buildCollectorPayload(String payload, HttpServletRequest req, Strin
             .keySet()
             .stream()
             .map(key -> encode(key) + "=" + encode(headers.get(key)))
-            .collect(Collectors.joining("&", payload, ""));
+            .collect(Collectors.joining("&", payload + "&", ""));
+            //.collect(Collectors.joining("&", payload, ""));
         
         //LOG.info("Encoded payload: " + encodedPayload);
 
