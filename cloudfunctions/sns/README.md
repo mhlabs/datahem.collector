@@ -1,11 +1,14 @@
-gcloud beta functions deploy receiveNotification --region europe-west1 --trigger-http --stage-bucket sns-cf --set-env-vars ACCOUNT_PATTERN=<aws-account>
+```bash
+gcloud beta functions deploy receiveNotification --region europe-west1 --trigger-http --stage-bucket <bucket> --set-env-vars ACCOUNT_PATTERN=<aws-account>
 
 Examples:
-test: gcloud beta functions deploy receiveNotification --region europe-west1 --trigger-http --stage-bucket sns-cf --set-env-vars ACCOUNT_PATTERN=25134460778
-prod: gcloud beta functions deploy receiveNotification --region europe-west1 --trigger-http --stage-bucket sns-cf --set-env-vars ACCOUNT_PATTERN=42520738248
 
+test: gcloud beta functions deploy receiveNotification --region europe-west1 --trigger-http --stage-bucket sns-cf --runtime nodejs6 --set-env-vars ACCOUNT_PATTERN=25134460778
+prod: gcloud beta functions deploy receiveNotification --region europe-west1 --trigger-http --stage-bucket sns-cf --runtime nodejs6 --set-env-vars ACCOUNT_PATTERN=42520738248
+```
 Set up a SNS HTTPS subscriber endpoint that points to the cloud function url: https://<region>-<project>.cloudfunctions.net/receiveNotification?topic=<my-pubsub-topic>
 Create corresponding pubsub topic and subscriber/s on gcp
+
 
 ## Version
 ## 0.2.0 (2019-04-02): Query parameter
