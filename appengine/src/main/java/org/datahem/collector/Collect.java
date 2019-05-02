@@ -80,7 +80,7 @@ import org.slf4j.LoggerFactory;
 
 public class Collect {
 	private static final Logger LOG = LoggerFactory.getLogger(Collect.class);
-	private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent","X-Forwarded-For").collect(Collectors.toList());
+	//private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent","X-Forwarded-For").collect(Collectors.toList());
 
   /**
    * Collects data and publish on pubSub. Returns 204 on success.
@@ -130,10 +130,11 @@ private void buildCollectorPayload(String payload, HttpServletRequest req, Strin
         HashMap<String, String> headers = Collections
 			.list(headerNames)
 			.stream()
-			.filter(s -> HEADERS.contains(s)) //Filter out fields and only keep those specified in HEADERS
+			//.filter(s -> HEADERS.contains(s)) //Filter out fields and only keep those specified in HEADERS
 			.map(s -> new String[]{s, req.getHeader(s)})
             .collect(HashMap::new, (m,v)->m.put(v[0], v[1]), HashMap::putAll);
 			//.collect(Collectors.toMap(s -> s[0], s -> s[1]));
+            //LOG.info("headers: " + headers.toString());
             try{
                 String ip = headers.getOrDefault("X-Forwarded-For", req.getRemoteAddr());
                 if(ip.lastIndexOf(".") != -1){
