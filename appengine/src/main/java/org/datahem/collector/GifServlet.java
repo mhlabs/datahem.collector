@@ -47,7 +47,9 @@ import java.util.stream.Stream;
 import java.util.Enumeration;
 import java.util.UUID;
 
-import org.joda.time.Instant;
+//import org.joda.time.Instant;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +60,6 @@ import org.slf4j.LoggerFactory;
 	description = "Collect get-hits and put on pubsub")
 public class GifServlet extends HttpServlet {
 	private static final Logger LOG = LoggerFactory.getLogger(GifServlet.class);
-	private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent").collect(Collectors.toList());
-
     // [START collect_get_gif]
 
     public final void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
@@ -92,7 +92,6 @@ private static String encode(Object decoded) {
 	}
 
 private void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
-		long timestampMillis = Instant.now().getMillis();
 		String uuid = UUID.randomUUID().toString();
         
 		//Use application id to get project id (first remove region prefix, i.e. s~ or e~)
@@ -102,17 +101,32 @@ private void buildCollectorPayload(String payload, HttpServletRequest req, Strin
         Map<String, String> headers = Collections
 			.list(headerNames)
 			.stream()
-			.filter(s -> HEADERS.contains(s)) //Filter out sensitive fields and only keep those specified in HEADERS
 			.map(s -> new String[]{s, req.getHeader(s)})
-			.collect(Collectors.toMap(s -> s[0], s -> s[1]));
+            .collect(HashMap::new, (m,v)->m.put(v[0], v[1]), HashMap::putAll);
+        
+        try{
+            String ip = headers.getOrDefault("X-Forwarded-For", req.getRemoteAddr());
+            if(ip.lastIndexOf(".") != -1){
+                headers.put("X-Forwarded-For", ip.substring(0, ip.lastIndexOf("."))+".0");
+            }else if(ip.lastIndexOf(":") != -1){
+                int n = 3;
+                String substr = ":";
+                int pos = ip.indexOf(substr);
+                while (--n > 0 && pos != -1)
+                    pos = ip.indexOf(substr, pos + 1);
+                headers.put("X-Forwarded-For", ip.substring(0, pos)+":::::");
+            }
+        }catch(StringIndexOutOfBoundsException e){
+               LOG.error("collector buildcollectorpayload ip StringIndexOutOfBoundsException", e);
+        }
 
 		PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
 			.putAllAttributes(
-			ImmutableMap.<String, String>builder()
+                ImmutableMap.<String, String>builder()
                 .putAll(headers)
-				.put("MessageTimestamp", Long.toString(timestampMillis))
-				.put("MessageStream", stream)
-				.put("MessageUuid", uuid)
+                .put("timestamp", new DateTime(DateTimeZone.UTC).toString())
+				.put("source", stream)
+				.put("uuid", uuid)
 				.build()
 			)
 			.setData(ByteString.copyFromUtf8(payload))

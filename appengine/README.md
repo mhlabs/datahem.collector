@@ -3,6 +3,10 @@
 Collect data sent from trackers and publish the data on pubsub, currently running on Google App Engine Standard (Java8) and Cloud Endpoints.
 
 ## Version
+## 1.0.1 (2019-05-02): Fix headers
+Removed header filter to enable a more forgiving collector, i.e. if Google make changes to header naming again (User-Agent -> user-agent).
+Fixed GifServlet to follow the same behaviour as Collect.
+
 ## 1.0.0 (2019-04-16): Anonymized IP
 Added anonymized IP to headers
 Changed back headers to pubsub headers to support generic collector messages

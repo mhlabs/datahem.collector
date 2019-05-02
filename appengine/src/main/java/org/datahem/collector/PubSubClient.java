@@ -47,7 +47,6 @@ public class PubSubClient implements ServletContextListener {
 	private static final Logger LOG = LoggerFactory.getLogger(PubSubClient.class);
 
 	private static ServletContext sc;
-	//private static Map<String, Publisher> publishers;
 	private static LoadingCache<String, Publisher> publishers;
 	private static CacheLoader<String, Publisher> loader;
 	private static RemovalListener<String, Publisher> removalListener;

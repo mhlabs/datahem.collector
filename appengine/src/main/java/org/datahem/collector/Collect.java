@@ -53,9 +53,6 @@ import java.util.stream.Stream;
 import java.util.Enumeration;
 import java.util.UUID;
 
-//import org.joda.time.Instant;
-//import org.joda.time.format.DateTimeFormat;
-//import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -80,7 +77,7 @@ import org.slf4j.LoggerFactory;
 
 public class Collect {
 	private static final Logger LOG = LoggerFactory.getLogger(Collect.class);
-	private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent","X-Forwarded-For").collect(Collectors.toList());
+	//private static final List<String> HEADERS = Stream.of("X-AppEngine-Country","X-AppEngine-Region","X-AppEngine-City","X-AppEngine-CityLatLong","User-Agent","X-Forwarded-For").collect(Collectors.toList());
 
   /**
    * Collects data and publish on pubSub. Returns 204 on success.
@@ -120,7 +117,6 @@ private static String encode(Object decoded) {
 	}
 
 private void buildCollectorPayload(String payload, HttpServletRequest req, String stream) throws IOException{
-		//long timestampMillis = Instant.now().getMillis();
 		String uuid = UUID.randomUUID().toString();
         
 		//Use application id to get project id (first remove region prefix, i.e. s~ or e~)
@@ -130,10 +126,9 @@ private void buildCollectorPayload(String payload, HttpServletRequest req, Strin
         HashMap<String, String> headers = Collections
 			.list(headerNames)
 			.stream()
-			.filter(s -> HEADERS.contains(s)) //Filter out fields and only keep those specified in HEADERS
 			.map(s -> new String[]{s, req.getHeader(s)})
             .collect(HashMap::new, (m,v)->m.put(v[0], v[1]), HashMap::putAll);
-			//.collect(Collectors.toMap(s -> s[0], s -> s[1]));
+			
             try{
                 String ip = headers.getOrDefault("X-Forwarded-For", req.getRemoteAddr());
                 if(ip.lastIndexOf(".") != -1){
@@ -149,31 +144,17 @@ private void buildCollectorPayload(String payload, HttpServletRequest req, Strin
             }catch(StringIndexOutOfBoundsException e){
                 LOG.error("collector buildcollectorpayload ip StringIndexOutOfBoundsException", e);
             }
-            //LOG.info("headers: " + headers.toString());
-
-        /*
-        String encodedPayload = headers
-            .keySet()
-            .stream()
-            .map(key -> encode(key) + "=" + encode(headers.get(key)))
-            .collect(Collectors.joining("&", payload + "&", ""));
-            //.collect(Collectors.joining("&", payload, ""));
-        
-        //LOG.info("Encoded payload: " + encodedPayload);
-        */
 
 		PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
 			.putAllAttributes(
 			ImmutableMap.<String, String>builder()
                 .putAll(headers)
-				//.put("timestamp", Long.toString(timestampMillis))
                 .put("timestamp", new DateTime(DateTimeZone.UTC).toString())
 				.put("source", stream)
 				.put("uuid", uuid)
 				.build()
 			)
 			.setData(ByteString.copyFromUtf8(payload))
-            //.setData(ByteString.copyFromUtf8(encodedPayload))
 			.build();
 
 		publishMessage(pubsubMessage, pubSubProjectId, stream);
