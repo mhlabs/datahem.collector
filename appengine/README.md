@@ -5,14 +5,17 @@ Collect data sent from trackers and publish the data on pubsub, currently runnin
 ## Version
 ## 1.0.1 (2019-05-02): Fix headers
 Removed header filter to enable a more forgiving collector, i.e. if Google make changes to header naming again (User-Agent -> user-agent).
+
 Fixed GifServlet to follow the same behaviour as Collect.
 
 ## 1.0.0 (2019-04-16): Anonymized IP
 Added anonymized IP to headers
+
 Changed back headers to pubsub headers to support generic collector messages
 
 ## 0.10.3 (2019-04-03): Append request headers to payload
 Appending request headers to payload instead of pubsub attributes to keep attributes clean.
+
 Changed naming of attributes fields:
 - timestamp (previously messageTimestamp, now utc timestamp intead of epoch millis)
 - uuid (previously messgeUuid)
@@ -29,10 +32,12 @@ Added shutdown hook to gracefully shutdown publishers when java runtime is shutt
 
 ## 0.10.0 (2019-01-09): Restricted access with API keys and new api method paths
 Added method for restricted access (POST) with API keys to enable control over webhooks to post data to the collector endpoint.
+
 Changed naming of API method (name and path) to reflect usage, i.e. open vs restricted.
 
 ## 0.9.0 (2018-12-20): Cache and expire publishers and MP headers in pubsub message attributes
 Cache and expire publishers to avoid orphaned grpc channels while utilizing the high performance of "long lived" publishers.
+
 Swithed from appending request headers to request body to adding headers to pubsub attributes.
 
 ## 0.8.1 (2018-12-18): Long lived publisher

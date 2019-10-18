@@ -48,7 +48,7 @@
         <filter-class>com.google.api.control.extensions.appengine.GoogleAppEngineControlFilter</filter-class>
         <init-param>
             <param-name>endpoints.projectId</param-name>
-                        <param-value>${endpoints.project.id}</param-value>
+            <param-value>${endpoints.project.id}</param-value>
         </init-param>
         <init-param>
             <param-name>endpoints.serviceName</param-name>
