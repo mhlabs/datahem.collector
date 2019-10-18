@@ -1,0 +1,22 @@
+{
+  "name": "webhook",
+  "version": "0.0.1",
+  "description": "cloud function to subscribe to multiple webhooks and publish to coresponding pubsub topic",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhlabs/datahem.collector.git"
+  },
+  "author": "robert sahlin",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/mhlabs/datahem.collector/issues"
+  },
+  "homepage": "https://github.com/mhlabs/datahem.collector#readme",
+  "dependencies": {
+    "@google-cloud/pubsub": "0.28.1"
+  }
+}
