@@ -39,7 +39,7 @@ exports.webhook = async function webhook (req, res) {
     var payload;
     var attributes = new Map([
         ['topic',req.query.topic],
-        ['timestamp',new Date().getTime()],
+        ['timestamp',new Date().toISOString()],
         ['uuid','abc123']
     ]);
     var headerMap = new Map(Object.entries(req.headers));
