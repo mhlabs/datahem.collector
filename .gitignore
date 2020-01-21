@@ -5,5 +5,8 @@
 *.war
 *.ear
 
-#mvn
+# mvn #
 target/
+
+# npm #
+node_modules/

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mhlabs/datahem.collector#readme",
   "dependencies": {
-    "@google-cloud/pubsub": "0.28.1"
+    "@google-cloud/pubsub": "0.28.1",
+    "uuid": "^3.3.3"
   }
 }
