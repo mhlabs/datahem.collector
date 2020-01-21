@@ -5,5 +5,9 @@
 *.war
 *.ear
 
-#mvn
+# mvn #
 target/
+
+# npm #
+**/node_modules/
+cloudfunctions/webhook/node_modules/
