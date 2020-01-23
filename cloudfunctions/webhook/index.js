@@ -15,8 +15,7 @@
 // import the Google Cloud Pubsub client library
 const {PubSub} = require('@google-cloud/pubsub');
 
-// our pubsub client
-const pubsub = new PubSub(); //modified
+const pubsub = new PubSub();
 const TRANSPARENT_GIF_BUFFER = Buffer.from('R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=', 'base64');
 
 const util = require('util');
@@ -47,56 +46,43 @@ async function publish(res, topicName, backupTopic, payload, attributes){
 }
 
 exports.webhook = async function webhook (req, res) {
-    var topicName = req.query.topic;
-    if(topicName !== undefined){
-        var payload;
-        var attributes = {
-            topic : req.query.topic,
-            timestamp :  new Date().toISOString(),
-            uuid : uuidv4()
-        };
-        //var headerMap = new Map(Object.entries(req.headers));
-        //attributes = new Map([...attributes, ...headerMap]);
-        attributes = {...attributes, ...req.headers};
-        switch(req.method){
-            case 'POST':
-                payload = req.body;
-                //var queryStringMap = new Map(Object.entries(req.query));
-                //attributes = new Map([...attributes, ...queryStringMap]);
-                attributes = {...attributes, ...req.query};
-                await publish(res, topicName, backupTopic, payload, attributes);
-                   /* .catch(function(err) {
-                        console.error(err.message);
-                        res.status(400).end(`error when publishing data object to pubsub`);
-                    });
-                    */
-                if(!res.headersSent){
-                    res.status(200).end('ok');
-                }
-                break;
-            case 'GET':
-                var i = req.url.indexOf('?');
-                payload = req.url.substr(i+1);
-                await publish(res, topicName, backupTopic, payload, attributes);
-                   /* .catch(function(err) {
-                        console.error(err.message);
-                        res.status(400).end(`error when publishing data object to pubsub`);
-                    });*/
-                if(!res.headersSent){
-                    res.writeHead(200, { 'Content-Type': 'image/gif' });
-                    res.end(TRANSPARENT_GIF_BUFFER, 'binary');
-                }
-                break;
-            case 'OPTIONS':
-                res.set('Access-Control-Allow-Origin', '*');
-                res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-                res.set('Access-Control-Allow-Headers', 'Content-Type');
-                res.set('Access-Control-Max-Age', '3600');
-                res.status(204).send('');
-                break;
+        var topicName = req.query.topic;
+        if(topicName !== undefined){
+            var payload;
+            var attributes = {
+                topic : req.query.topic,
+                timestamp :  new Date().toISOString(),
+                uuid : uuidv4()
+            };
+            attributes = {...attributes, ...req.headers};
+            res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, HEAD');
+            //res.set('Access-Control-Allow-Headers', Object.keys(req.headers).join());
+            res.set('Access-Control-Max-Age', '3600');
+            switch(req.method){
+                case 'POST':
+                    payload = req.body;
+                    attributes = {...attributes, ...req.query};
+                    await publish(res, topicName, backupTopic, payload, attributes);
+                    if(!res.headersSent){
+                        res.status(204).end();
+                    }
+                    break;
+                case 'GET':
+                    var i = req.url.indexOf('?');
+                    payload = req.url.substr(i+1);
+                    await publish(res, topicName, backupTopic, payload, attributes);
+                    if(!res.headersSent){
+                        res.writeHead(200, { 'Content-Type': 'image/gif' });
+                        res.end(TRANSPARENT_GIF_BUFFER, 'binary');
+                    }
+                    break;
+                case 'OPTIONS':
+                    res.status(204).send('');
+                    break;
+            }
+        }else{
+            console.error("topic query param undefined");
+            res.status(400).end('topic query param undefined');    
         }
-    }else{
-        console.error("topic query param undefined");
-        res.status(400).end('topic query param undefined');    
-    }
 };
