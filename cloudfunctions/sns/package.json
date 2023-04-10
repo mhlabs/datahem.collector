@@ -19,7 +19,7 @@
   "dependencies": {
     "@google-cloud/kms": "^2.1.2",
     "@google-cloud/pubsub": "^2.5.0",
-    "aws-sdk": "^2.756.0",
+    "aws-sdk": "^2.1354.0",
     "sns-validator": "^0.3.4"
   }
 }
